@@ -16,16 +16,14 @@ class Books extends Table {
 
 @DriftDatabase(tables: [Books])
 class AppDatabase extends _$AppDatabase {
-  // Statik bir örnek (instance) oluşturuyoruz.
   static final AppDatabase instance = AppDatabase._internal();
 
-  // Kurucuyu gizli hale getiriyoruz.
   AppDatabase._internal() : super(_openConnection());
 
   @override
   int get schemaVersion => 1;
 
-  // Yeni kitap ekleme fonksiyonu
+ // Add
   Future<void> addBook(String title, String author, {DateTime? publicationDate}) async {
     await into(books).insert(BooksCompanion(
       title: Value(title),
@@ -34,13 +32,37 @@ class AppDatabase extends _$AppDatabase {
     ));
   }
 
-  // Başlığa göre kitap bulma fonksiyonu
+ // Find
   Future<Book?> findBookByTitle(String title) async {
     return await (select(books)
           ..where((t) => t.title.equals(title)))
         .getSingleOrNull();
   }
+
+ //Update 
+
+Future<bool> updateBook(int id, String newTitle, String newAuthor) async {
+  final count = await (update(books)
+        ..where((t) => t.id.equals(id)))
+      .write(BooksCompanion(
+        title: Value(newTitle),
+        author: Value(newAuthor),
+      ));
+  return count > 0;
 }
+
+ // Delete
+  Future<int> deleteBook(int id) async {
+  return await (delete(books)
+        ..where((t) => t.id.equals(id)))
+      .go();
+  }
+
+ //List
+  Future<List<Book>> getAllBooks() async {
+  return await select(books).get();
+}
+} 
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
