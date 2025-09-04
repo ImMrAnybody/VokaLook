@@ -68,7 +68,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 return ListTile(
                   title: Text(book.title),
                   subtitle: Text(book.author),
-                  trailing: Text(book.publicationDate?.year.toString() ?? 'No Date'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(book.publicationDate?.year.toString() ?? 'No Date'),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          print('${book.title} is about to be deleted.');
+                        },
+                      ),
+                    ],
+                  ),
                 );
               },
             );
