@@ -24,13 +24,17 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 1;
 
  // Add
-  Future<void> addBook(String title, String author, {DateTime? publicationDate}) async {
-    await into(books).insert(BooksCompanion(
-      title: Value(title),
-      author: Value(author),
-      publicationDate: Value(publicationDate),
-    ));
-  }
+Future<void> addBook(String title, String author, {DateTime? publicationDate}) async {
+  // Eğer dışarıdan bir publicationDate gönderilmediyse (null ise),
+  // güncel sistem saatini kullan.
+  final dateToInsert = publicationDate ?? DateTime.now();
+
+  await into(books).insert(BooksCompanion(
+    title: Value(title),
+    author: Value(author),
+    publicationDate: Value(dateToInsert),
+  ));
+}
 
  // Find
   Future<Book?> findBookByTitle(String title) async {

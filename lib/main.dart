@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'data/database/database.dart';
+import 'addbutton.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -37,8 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  Future<void> _initData() async {
-  }
+  Future<void> _initData() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -75,12 +76,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: () async {
                           final deletedRowCount = await db.deleteBook(book.id);
                           if (deletedRowCount > 0) {
-                            print('Kitap başarıyla silindi.');
+                            print('The book has been successfully deleted.');
                           } else {
-                            print('Silinecek kitap bulunamadı.');
+                            print('No book to delete was found.');
                           }
-
-                          print('${book.title} is about to be deleted.');
                         },
                       ),
                     ],
@@ -91,6 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         },
       ),
+      floatingActionButton: const AddButton(),
     );
   }
 }
