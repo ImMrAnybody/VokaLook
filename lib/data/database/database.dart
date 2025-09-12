@@ -59,8 +59,8 @@ Future<bool> updateBook(int id, String newTitle, String newAuthor) async {
   }
 
  //List
-  Future<List<Book>> getAllBooks() async {
-  return await select(books).get();
+  Stream<List<Book>> getAllBooks() {
+  return select(books).watch();
 }
 } 
 

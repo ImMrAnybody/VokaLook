@@ -35,23 +35,21 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    
   }
 
   Future<void> _initData() async {
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title), 
-        elevation: 0, 
-        backgroundColor: Theme.of(context).colorScheme.background, 
+        title: Text(widget.title),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.background,
       ),
-      body: FutureBuilder<List<Book>>(
-        future: db.getAllBooks(),
+      body: StreamBuilder<List<Book>>(
+        stream: db.getAllBooks(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -74,7 +72,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       Text(book.publicationDate?.year.toString() ?? 'No Date'),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        onPressed: () {
+                        onPressed: () async {
+                          final deletedRowCount = await db.deleteBook(book.id);
+                          if (deletedRowCount > 0) {
+                            print('Kitap başarıyla silindi.');
+                          } else {
+                            print('Silinecek kitap bulunamadı.');
+                          }
+
                           print('${book.title} is about to be deleted.');
                         },
                       ),
