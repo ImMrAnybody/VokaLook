@@ -93,4 +93,18 @@ class MyDatabase extends _$MyDatabase {
       }
     });
   }
+
+  Future<int> createWordSet({
+    required String name,
+    required String languagePair,
+    required bool isUserDefined,
+  }) async {
+    return into(wordSets).insert(
+      WordSetsCompanion.insert(
+        name: name,
+        languagePair: languagePair,
+        isUserDefined: Value(isUserDefined),
+      ),
+    );
+  }
 }
