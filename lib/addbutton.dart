@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'data/database/database.dart';
+import 'package:flutter/services.dart';
 
 class AddButton extends StatefulWidget {
   const AddButton({super.key});
@@ -23,9 +24,7 @@ class _AddButtonState extends State<AddButton> {
             children: [
               TextField(
                 controller: _BookNameController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter Book Title',
-                ),
+                decoration: const InputDecoration(hintText: 'Enter Book Title'),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -51,11 +50,8 @@ class _AddButtonState extends State<AddButton> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('This book is already attached!'),
-                      backgroundColor:
-                          Colors.red, 
-                      duration: Duration(
-                        seconds: 2,
-                      ),
+                      backgroundColor: Colors.red,
+                      duration: Duration(seconds: 2),
                     ),
                   );
                 } else {
@@ -72,17 +68,21 @@ class _AddButtonState extends State<AddButton> {
       },
     );
   }
-    @override
+
+  @override
   void dispose() {
     _BookAuthorController.dispose();
     _BookNameController.dispose();
-    super.dispose(); 
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: _showAddDialog,
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        _showAddDialog();
+      },
       child: const Icon(Icons.add),
     );
   }

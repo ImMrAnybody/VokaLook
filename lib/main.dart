@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'data/database/database.dart';
 import 'addbutton.dart';
-
+import 'editbutton.dart';
 
 void main() {
   runApp(const MyApp());
@@ -71,6 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(book.publicationDate?.year.toString() ?? 'No Date'),
+                      EditButton(bookToEdit: book),
+
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () async {
