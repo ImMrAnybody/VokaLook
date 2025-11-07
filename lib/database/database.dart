@@ -23,6 +23,7 @@ class WordSets extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 255)();
   TextColumn get languagePair => text()();
+  TextColumn get category => text().nullable()(); 
   BoolColumn get isUserDefined =>
       boolean().withDefault(const Constant(false))();
 }
@@ -48,9 +49,28 @@ class MyDatabase extends _$MyDatabase {
   MyDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 1; 
 
-  // Yeni eklenen fonksiyon
+  // Function to add the default set when the database is opened for the first time
+  Future<void> initializeDefaultSet() async {
+    final count = await select(wordSets).get().then((rows) => rows.length);
+    
+    // If no sets exist
+    if (count == 0) {
+      print('Database is empty. Creating default set...');
+      await createWordSet(
+        name: 'Basic Words',
+        languagePair: 'EN-TR',
+        category: 'Entry Level', 
+        isUserDefined: false, 
+      );
+    }
+  }
+
+Stream<List<WordSet>> watchAllSets() {
+    return select(wordSets).watch();
+  }
+
   Future<bool> doesSetExist(int setId) async {
     return (await (select(
           wordSets,
@@ -58,7 +78,7 @@ class MyDatabase extends _$MyDatabase {
         null;
   }
 
-  // Güncellenmiş fonksiyon
+  // Updated function 
   Future<void> addWordPair(
     String originalText,
     String originalLanguageCode,
@@ -70,7 +90,7 @@ class MyDatabase extends _$MyDatabase {
     for (var setId in setIds) {
       final setExists = await doesSetExist(setId);
       if (!setExists) {
-        throw ArgumentError('Belirtilen ID\'ye sahip set bulunamadı: $setId');
+        throw ArgumentError('Set with the specified ID was not found: $setId');
       }
     }
 
@@ -97,12 +117,14 @@ class MyDatabase extends _$MyDatabase {
   Future<int> createWordSet({
     required String name,
     required String languagePair,
+    String? category, // Category can now be optional
     required bool isUserDefined,
   }) async {
     return into(wordSets).insert(
       WordSetsCompanion.insert(
         name: name,
         languagePair: languagePair,
+        category: Value(category), // Insert Category using Value
         isUserDefined: Value(isUserDefined),
       ),
     );

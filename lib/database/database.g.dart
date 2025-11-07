@@ -546,6 +546,17 @@ class $WordSetsTable extends WordSets with TableInfo<$WordSetsTable, WordSet> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isUserDefinedMeta = const VerificationMeta(
     'isUserDefined',
   );
@@ -562,7 +573,13 @@ class $WordSetsTable extends WordSets with TableInfo<$WordSetsTable, WordSet> {
     defaultValue: const Constant(false),
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, languagePair, isUserDefined];
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    languagePair,
+    category,
+    isUserDefined,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -597,6 +614,12 @@ class $WordSetsTable extends WordSets with TableInfo<$WordSetsTable, WordSet> {
     } else if (isInserting) {
       context.missing(_languagePairMeta);
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     if (data.containsKey('is_user_defined')) {
       context.handle(
         _isUserDefinedMeta,
@@ -627,6 +650,10 @@ class $WordSetsTable extends WordSets with TableInfo<$WordSetsTable, WordSet> {
         DriftSqlType.string,
         data['${effectivePrefix}language_pair'],
       )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
       isUserDefined: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_user_defined'],
@@ -644,11 +671,13 @@ class WordSet extends DataClass implements Insertable<WordSet> {
   final int id;
   final String name;
   final String languagePair;
+  final String? category;
   final bool isUserDefined;
   const WordSet({
     required this.id,
     required this.name,
     required this.languagePair,
+    this.category,
     required this.isUserDefined,
   });
   @override
@@ -657,6 +686,9 @@ class WordSet extends DataClass implements Insertable<WordSet> {
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['language_pair'] = Variable<String>(languagePair);
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
     map['is_user_defined'] = Variable<bool>(isUserDefined);
     return map;
   }
@@ -666,6 +698,9 @@ class WordSet extends DataClass implements Insertable<WordSet> {
       id: Value(id),
       name: Value(name),
       languagePair: Value(languagePair),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
       isUserDefined: Value(isUserDefined),
     );
   }
@@ -679,6 +714,7 @@ class WordSet extends DataClass implements Insertable<WordSet> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       languagePair: serializer.fromJson<String>(json['languagePair']),
+      category: serializer.fromJson<String?>(json['category']),
       isUserDefined: serializer.fromJson<bool>(json['isUserDefined']),
     );
   }
@@ -689,6 +725,7 @@ class WordSet extends DataClass implements Insertable<WordSet> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'languagePair': serializer.toJson<String>(languagePair),
+      'category': serializer.toJson<String?>(category),
       'isUserDefined': serializer.toJson<bool>(isUserDefined),
     };
   }
@@ -697,11 +734,13 @@ class WordSet extends DataClass implements Insertable<WordSet> {
     int? id,
     String? name,
     String? languagePair,
+    Value<String?> category = const Value.absent(),
     bool? isUserDefined,
   }) => WordSet(
     id: id ?? this.id,
     name: name ?? this.name,
     languagePair: languagePair ?? this.languagePair,
+    category: category.present ? category.value : this.category,
     isUserDefined: isUserDefined ?? this.isUserDefined,
   );
   WordSet copyWithCompanion(WordSetsCompanion data) {
@@ -711,6 +750,7 @@ class WordSet extends DataClass implements Insertable<WordSet> {
       languagePair: data.languagePair.present
           ? data.languagePair.value
           : this.languagePair,
+      category: data.category.present ? data.category.value : this.category,
       isUserDefined: data.isUserDefined.present
           ? data.isUserDefined.value
           : this.isUserDefined,
@@ -723,13 +763,15 @@ class WordSet extends DataClass implements Insertable<WordSet> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('languagePair: $languagePair, ')
+          ..write('category: $category, ')
           ..write('isUserDefined: $isUserDefined')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, languagePair, isUserDefined);
+  int get hashCode =>
+      Object.hash(id, name, languagePair, category, isUserDefined);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -737,6 +779,7 @@ class WordSet extends DataClass implements Insertable<WordSet> {
           other.id == this.id &&
           other.name == this.name &&
           other.languagePair == this.languagePair &&
+          other.category == this.category &&
           other.isUserDefined == this.isUserDefined);
 }
 
@@ -744,17 +787,20 @@ class WordSetsCompanion extends UpdateCompanion<WordSet> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> languagePair;
+  final Value<String?> category;
   final Value<bool> isUserDefined;
   const WordSetsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.languagePair = const Value.absent(),
+    this.category = const Value.absent(),
     this.isUserDefined = const Value.absent(),
   });
   WordSetsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String languagePair,
+    this.category = const Value.absent(),
     this.isUserDefined = const Value.absent(),
   }) : name = Value(name),
        languagePair = Value(languagePair);
@@ -762,12 +808,14 @@ class WordSetsCompanion extends UpdateCompanion<WordSet> {
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? languagePair,
+    Expression<String>? category,
     Expression<bool>? isUserDefined,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (languagePair != null) 'language_pair': languagePair,
+      if (category != null) 'category': category,
       if (isUserDefined != null) 'is_user_defined': isUserDefined,
     });
   }
@@ -776,12 +824,14 @@ class WordSetsCompanion extends UpdateCompanion<WordSet> {
     Value<int>? id,
     Value<String>? name,
     Value<String>? languagePair,
+    Value<String?>? category,
     Value<bool>? isUserDefined,
   }) {
     return WordSetsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       languagePair: languagePair ?? this.languagePair,
+      category: category ?? this.category,
       isUserDefined: isUserDefined ?? this.isUserDefined,
     );
   }
@@ -798,6 +848,9 @@ class WordSetsCompanion extends UpdateCompanion<WordSet> {
     if (languagePair.present) {
       map['language_pair'] = Variable<String>(languagePair.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (isUserDefined.present) {
       map['is_user_defined'] = Variable<bool>(isUserDefined.value);
     }
@@ -810,6 +863,7 @@ class WordSetsCompanion extends UpdateCompanion<WordSet> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('languagePair: $languagePair, ')
+          ..write('category: $category, ')
           ..write('isUserDefined: $isUserDefined')
           ..write(')'))
         .toString();
@@ -1397,6 +1451,7 @@ typedef $$WordSetsTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       required String languagePair,
+      Value<String?> category,
       Value<bool> isUserDefined,
     });
 typedef $$WordSetsTableUpdateCompanionBuilder =
@@ -1404,6 +1459,7 @@ typedef $$WordSetsTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> name,
       Value<String> languagePair,
+      Value<String?> category,
       Value<bool> isUserDefined,
     });
 
@@ -1452,6 +1508,11 @@ class $$WordSetsTableFilterComposer
 
   ColumnFilters<String> get languagePair => $composableBuilder(
     column: $table.languagePair,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1510,6 +1571,11 @@ class $$WordSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isUserDefined => $composableBuilder(
     column: $table.isUserDefined,
     builder: (column) => ColumnOrderings(column),
@@ -1535,6 +1601,9 @@ class $$WordSetsTableAnnotationComposer
     column: $table.languagePair,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   GeneratedColumn<bool> get isUserDefined => $composableBuilder(
     column: $table.isUserDefined,
@@ -1598,11 +1667,13 @@ class $$WordSetsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> languagePair = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<bool> isUserDefined = const Value.absent(),
               }) => WordSetsCompanion(
                 id: id,
                 name: name,
                 languagePair: languagePair,
+                category: category,
                 isUserDefined: isUserDefined,
               ),
           createCompanionCallback:
@@ -1610,11 +1681,13 @@ class $$WordSetsTableTableManager
                 Value<int> id = const Value.absent(),
                 required String name,
                 required String languagePair,
+                Value<String?> category = const Value.absent(),
                 Value<bool> isUserDefined = const Value.absent(),
               }) => WordSetsCompanion.insert(
                 id: id,
                 name: name,
                 languagePair: languagePair,
+                category: category,
                 isUserDefined: isUserDefined,
               ),
           withReferenceMapper: (p0) => p0
